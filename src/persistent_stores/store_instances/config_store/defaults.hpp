@@ -265,8 +265,6 @@ namespace defaults {
     inline constexpr float axis_steps_per_unit_e0 { default_axis_steps_flt[3] * ((DEFAULT_INVERT_E0_DIR == true) ? -1.f : 1.f) };
     inline constexpr uint16_t axis_microsteps_Z_ { Z_MICROSTEPS };
     inline constexpr uint16_t axis_microsteps_E0_ { E0_MICROSTEPS };
-    inline constexpr uint16_t axis_rms_current_ma_X_ { X_CURRENT };
-    inline constexpr uint16_t axis_rms_current_ma_Y_ { Y_CURRENT };
     inline constexpr uint16_t axis_rms_current_ma_Z_ { Z_CURRENT };
     inline constexpr uint16_t axis_rms_current_ma_E0_ { E0_CURRENT };
 
@@ -309,6 +307,8 @@ namespace defaults {
         145
     #elif MINI_COREXY
         112
+    #elif I3_COREXY
+         -5
     #else
         130
     #endif
@@ -319,7 +319,7 @@ namespace defaults {
 
     inline constexpr int16_t homing_sens_y {
 
-#if X_DRIVER_TYPE == TMC2209
+#if Y_DRIVER_TYPE == TMC2209
         homing_sens_x
 #else
         stallguard_sensitivity_unset
@@ -378,8 +378,8 @@ namespace defaults {
     // Prusa CORE One has phase stepping enabled by default.
     // Due to its 400-step motors and CoreXY kinematics, the classic stepping
     // algorithm can't keep up with the increased demands caused by larger speeds.
-    inline constexpr bool phase_stepping_enabled_x = PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_COREONE();
-    inline constexpr bool phase_stepping_enabled_y = PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_COREONE();
+    inline constexpr bool phase_stepping_enabled_x = PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_MK3_5() || PRINTER_IS_PRUSA_COREONE();
+    inline constexpr bool phase_stepping_enabled_y = PRINTER_IS_PRUSA_iX() || PRINTER_IS_PRUSA_MK3_5() || PRINTER_IS_PRUSA_COREONE();
 } // namespace defaults
 
 } // namespace config_store_ns
