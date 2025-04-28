@@ -124,6 +124,7 @@
    */
     #define WATCH_BED_TEMP_PERIOD 60 // Seconds
     #define WATCH_BED_TEMP_INCREASE 2 // Degrees Celsius
+
 #endif
 
 /**
@@ -472,11 +473,33 @@
 //kill command after probing fails
 //#define HALT_ON_PROBING_ERROR
 //after enabling HOMING_MAX_ATTEMPTS, homing can fail
-#ifdef PRECISE_HOMING // we do not want homing to fail, when precise homing is disabled
+#ifdef I3_COREXY
     #define HOMING_MAX_ATTEMPTS 10
+#else
+    #ifdef PRECISE_HOMING // we do not want homing to fail, when precise homing is disabled
+       #define HOMING_MAX_ATTEMPTS 10
+    #endif
 #endif
-
 // Homing hits each endstop, retracts by these distances, then does a slower bump.
+#ifdef I3_COREXY
+
+#define X_HOME_BUMP_MM 10
+#define Y_HOME_BUMP_MM 10
+#define Z_HOME_BUMP_MM 2
+#define HOMING_BUMP_DIVISOR \
+    { 1, 1, 4 } // Re-Bump Speed Divisor (Divides the Homing Feedrate)
+#define HOMING_BUMP_DIVISOR_MAX HOMING_BUMP_DIVISOR
+#define HOMING_BUMP_DIVISOR_MIN HOMING_BUMP_DIVISOR
+//#define QUICK_HOME                     // If homing includes X and Y, do a diagonal move initially
+
+// Move away from the endstops after homing
+#define HOMING_BACKOFF_POST_MM { 2, 2, 0 }
+
+// When G28 is called, this option will make Y home before X
+// X must be homed before Y to avoid Nozzle Cleaner
+#define HOME_Y_BEFORE_X false
+
+#else
 #define X_HOME_BUMP_MM 10
 #define Y_HOME_BUMP_MM 10
 #define Z_HOME_BUMP_MM 3
@@ -497,8 +520,14 @@
 // When G28 is called, this option will make Y home before X
 //#define HOME_Y_BEFORE_X
 
+#endif
+
 // Enable this if X or Y can't home without homing the other axis first.
+#ifdef I3_COREXY
+#define CODEPENDENT_XY_HOMING
+#else
 //#define CODEPENDENT_XY_HOMING
+#endif
 
 /**
  * Z Steppers Auto-Alignment
@@ -555,9 +584,14 @@
 
 // @section lcd
 
-#define MANUAL_FEEDRATE \
-    { 50 * 60, 50 * 60, 12 * 60, 4 * 60 } // Feedrates for manual moves along X, Y, Z, E from panel
 
+#ifdef I3_COREXY
+#define MANUAL_FEEDRATE \
+    { 50 * 60, 50 * 60, 8 * 60, 4 * 60 } // Feedrates for manual moves along X, Y, Z, E from panel
+#else
+    #define MANUAL_FEEDRATE \
+    { 50 * 60, 50 * 60, 12 * 60, 4 * 60 } // Feedrates for manual moves along X, Y, Z, E from panel
+#endif
 #if ENABLED(ULTIPANEL)
     #define MANUAL_E_MOVES_RELATIVE // Show LCD extruder moves as relative rather than absolute positions
     #define ULTIPANEL_FEEDMULTIPLY // Comment to disable setting feedrate multiplier via encoder
@@ -1102,11 +1136,17 @@
 // Lowbounds:
 // Leftmost position for X is 0
 // Frontmost position for Y is -4 (defined elsewhere: Y_MIN_POS)
-
-#define MESH_MIN_X (10.5f)
-#define MESH_MIN_Y (-10.5f)
-#define MESH_MAX_X (X_BED_SIZE + MESH_MIN_X - 5)
-#define MESH_MAX_Y (Y_BED_SIZE - MESH_MIN_Y)
+#ifdef I3_COREXY
+#define MESH_MIN_X ((-(X_BED_SIZE / (GRID_MAX_POINTS_X - 2 - 1))) + 15)
+#define MESH_MIN_Y ((-(Y_BED_SIZE / (GRID_MAX_POINTS_Y - 2 - 1))) + 15)
+#define MESH_MAX_X X_BED_SIZE - (MESH_MIN_X)
+#define MESH_MAX_Y Y_BED_SIZE - (MESH_MIN_Y)
+#else
+ #define MESH_MIN_X (10.5f)
+ #define MESH_MIN_Y (-10.5f)
+ #define MESH_MAX_X (X_BED_SIZE + MESH_MIN_X - 5)
+ #define MESH_MAX_Y (Y_BED_SIZE - MESH_MIN_Y)
+ #endif
 #endif
 
 /**
@@ -1561,8 +1601,18 @@
     #define INTERPOLATE true // Interpolate X/Y/Z_MICROSTEPS to 256
 
     #if AXIS_IS_TMC(X)
-        #define X_CURRENT 300 // (mA) RMS current.  MK3 motors
+	#ifdef I3_COREXY
+          #define X_CURRENT 550 // (mA) RMS current. Multiply by 1.414 for peak current.
+        #else
+    	  #define X_CURRENT 300 // (mA) RMS current.  MK3 motors
+        #endif
+
+        #ifdef I3_COREXY
+        #define X_MICROSTEPS 8 // 0..256
+        #else
         #define X_MICROSTEPS 16 // 0..256
+        #endif
+        
         #define X_RSENSE 0.22
         #define X_CHAIN_POS 0
     #endif
@@ -1574,8 +1624,17 @@
     #endif
 
     #if AXIS_IS_TMC(Y)
+        #ifdef I3_COREXY
+        #define Y_CURRENT 550 // (mA) RMS current. Multiply by 1.414 for peak current.
+        #else
         #define Y_CURRENT 370 // (mA) RMS current.  MK3 motors
+        #endif
+        #ifdef I3_COREXY
+        #define Y_MICROSTEPS 8
+        #else
         #define Y_MICROSTEPS 16
+        #endif
+        
         #define Y_RSENSE 0.22
         #define Y_CHAIN_POS 0
     #endif
@@ -1684,7 +1743,13 @@
    * Use Trinamic's ultra quiet stepping mode.
    * When disabled, Marlin will use spreadCycle stepping mode.
    */
+#ifdef I3_COREXY
+    //#define STEALTHCHOP_XY
+    //#define STEALTHCHOP_Z
+    //#define STEALTHCHOP_E
+#else
     #define STEALTHCHOP_Z
+#endif   
 
     /**
    * Optimize spreadCycle chopper parameters by using predefined parameter sets
@@ -1729,8 +1794,11 @@
    * STEALTHCHOP_(XY|Z|E) must be enabled to use HYBRID_THRESHOLD.
    * M913 X/Y/Z/E to live tune the setting
    */
-#define HYBRID_THRESHOLD
-
+#ifdef I3_COREXY
+   //#define HYBRID_THRESHOLD
+ #else
+     #define HYBRID_THRESHOLD
+#endif
     #define X_HYBRID_THRESHOLD 1000 // [mm/s]
     #define Y_HYBRID_THRESHOLD 1000
     #define Z_HYBRID_THRESHOLD 1
@@ -1807,6 +1875,34 @@
    */
 //#define SENSORLESS_PROBING
 
+#ifdef I3_COREXY
+    #if EITHER(SENSORLESS_HOMING, SENSORLESS_PROBING)
+        #define X_STALL_SENSITIVITY config_store().homing_sens_x.get()
+        #define Y_STALL_SENSITIVITY config_store().homing_sens_y.get()
+        #define Z_STALL_SENSITIVITY  4
+
+        // #define STALL_THRESHOLD_TMC2130 400 // Instead determined by get_homing_stall_threshold
+    #endif
+
+    #ifdef IMPROVE_HOMING_RELIABILITY
+        #define XY_HOMING_ACCELERATION 1250
+        #define XY_HOMING_JERK 8
+        #define X_CURRENT_HOME 550
+        #define Y_CURRENT_HOME 550
+        #if ENABLED(PRECISE_HOMING_COREXY)
+            #define PRECISE_HOMING_COREXY_RETRIES 6     // count: maximum number of refinement attempts
+            #define PRECISE_HOMING_SENS_TRY_RECAL 5     // count: recalibrate sensitivity at [x] failed attempts
+            #define XY_HOMING_HOLDING_CURRENT 900       // mA: holding current for fixed motor
+            #define XY_HOMING_MEASURE_CURRENT 650       // mA: holding current for the measured motor
+            #define XY_HOMING_MEASURE_SENS_MIN -12      // minimum sensitivity threshold for measured motor
+            #define XY_HOMING_MEASURE_SENS_MAX -10      // maximum sensitivity threshold for measured motor
+            #define XY_HOMING_MEASURE_FR 70.f           // mm/s: bumping feedrate
+            #define XY_HOMING_ORIGIN_OFFSET 5.f         // mm: parallel distance from initial origin
+            #define XY_HOMING_ORIGIN_BUMP_RETRIES 10    // count: maximum number of measurement attempts
+            #define XY_HOMING_ORIGIN_BUMP_MAX_ERR 0.075 // mm: max error between acceptable probes
+        #endif
+     #endif
+#else
     #if EITHER(SENSORLESS_HOMING, SENSORLESS_PROBING)
         // The range of stallguard sensitivities to probe and calibrate
         // (the required sensitivity varies by motor)
@@ -1832,6 +1928,8 @@
             #define XY_HOMING_JERK 8
         #endif
     #endif
+
+#endif
 
     // Create a 50/50 square wave step pulse optimal for stepper drivers.
     #define SQUARE_WAVE_STEPPING

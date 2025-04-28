@@ -207,7 +207,12 @@
  *  When switched on and the compatibility mode is turned on at runtime,
  *  some gcodes (like G80) can have a different meaning.
  */
+#ifdef I3_COREXY
+//#define GCODE_COMPATIBILITY_MK3
+//#define FAN_COMPATIBILITY_MK4_MK3
+#else
 #define GCODE_COMPATIBILITY_MK3
+#endif
 
 // A dual extruder that uses a single stepper motor
 //#define SWITCHING_EXTRUDER
@@ -752,14 +757,32 @@
  * Override with M203
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
-#define DEFAULT_MAX_FEEDRATE \
+
+#ifdef I3_COREXY
+    #define DEFAULT_MAX_FEEDRATE \
+    { 400, 400, 30, 50 }
+#else
+    #define DEFAULT_MAX_FEEDRATE \
     { 200, 200, 40, 45 }
+#endif
 
 /// HW limits of feed rate
-#define HWLIMIT_NORMAL_MAX_FEEDRATE \
+
+#ifdef I3_COREXY
+    #define HWLIMIT_NORMAL_MAX_FEEDRATE \
+    { 350, 350, 35, 100 }
+#else
+    #define HWLIMIT_NORMAL_MAX_FEEDRATE \
     { 300, 300, 12, 120 }
-#define HWLIMIT_STEALTH_MAX_FEEDRATE \
+#endif
+
+#ifdef I3_COREXY
+   #define HWLIMIT_STEALTH_MAX_FEEDRATE \
+   { 160, 160, 12, 100 }
+#else
+    #define HWLIMIT_STEALTH_MAX_FEEDRATE \
     { 160, 160, 40, 100 }
+#endif    
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
@@ -767,12 +790,23 @@
  * Override with M201
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
-#define DEFAULT_MAX_ACCELERATION \
+#ifdef I3_COREXY
+   #define DEFAULT_MAX_ACCELERATION \
+   { 10000, 10000, 1000, 1500 }
+#else
+    #define DEFAULT_MAX_ACCELERATION \
     { 1250, 1250, 400, 4000 }
+#endif    
 
 /// HW limits of max acceleration
-#define HWLIMIT_NORMAL_MAX_ACCELERATION \
+
+#ifdef I3_COREXY
+   #define HWLIMIT_NORMAL_MAX_ACCELERATION \
+    { 10000, 10000, 1000, 6000 }
+#else
+    #define HWLIMIT_NORMAL_MAX_ACCELERATION \
     { 7000, 7000, 750, 6000 }
+#endif    
 #define HWLIMIT_STEALTH_MAX_ACCELERATION \
     { 2500, 2500, 200, 2500 }
 
@@ -786,11 +820,19 @@
  */
 #define DEFAULT_ACCELERATION 1250 // X, Y, Z and E acceleration for printing moves
 #define DEFAULT_RETRACT_ACCELERATION 1250 // E acceleration for retracts
-#define DEFAULT_TRAVEL_ACCELERATION 1250 // X, Y, Z acceleration for travel (non printing) moves
+#ifdef I3_COREXY
+   #define DEFAULT_TRAVEL_ACCELERATION 1500 // X, Y, Z acceleration for travel (non printing) moves
+#else
+   #define DEFAULT_TRAVEL_ACCELERATION 1250 // X, Y, Z acceleration for travel (non printing) moves
+#endif
+
 
 //
 // Use Junction Deviation instead of traditional Jerk Limiting
 //
+#ifdef I3_COREXY
+//#define JUNCTION_DEVIATION
+#endif
 #define CLASSIC_JERK
 #if DISABLED(CLASSIC_JERK)
     #define JUNCTION_DEVIATION_MM 0.02 // (mm) Distance from real junction edge
@@ -942,8 +984,16 @@
  *      O-- FRONT --+
  *    (0,0)
  */
-#define NOZZLE_TO_PROBE_OFFSET \
-    { 23, 5, 0 }
+
+#ifdef I3_COREXY
+   #define NOZZLE_TO_PROBE_OFFSET \
+    { 0, 0, 0 }
+#else
+   #define NOZZLE_TO_PROBE_OFFSET \
+   { 23, 5, 0 }
+#endif
+
+    
 
 // Certain types of probes need to stay away from edges
 #define MIN_PROBE_EDGE 0
@@ -1048,9 +1098,17 @@
 #define DISABLE_INACTIVE_EXTRUDER // Keep only the active extruder enabled
 
 // default values
-#define DEFAULT_INVERT_X_DIR false
-#define DEFAULT_INVERT_Y_DIR true
-#define DEFAULT_INVERT_Z_DIR false
+
+#ifdef I3_COREXY
+    #define DEFAULT_INVERT_X_DIR false
+    #define DEFAULT_INVERT_Y_DIR false
+    #define DEFAULT_INVERT_Z_DIR true
+#else
+    #define DEFAULT_INVERT_X_DIR false
+    #define DEFAULT_INVERT_Y_DIR true
+    #define DEFAULT_INVERT_Z_DIR false
+#endif
+
 
 
 #define DEFAULT_INVERT_E0_DIR false
@@ -1092,8 +1150,15 @@
 
 // Direction of endstops when homing; 1=MAX, -1=MIN
 // :[-1,1]
-#define X_HOME_DIR -1
-#define Y_HOME_DIR -1
+
+#ifdef I3_COREXY
+   #define X_HOME_DIR -1
+   #define Y_HOME_DIR  1
+#else
+    #define X_HOME_DIR -1
+    #define Y_HOME_DIR -1
+#endif
+
 #define Z_HOME_DIR -1
 
 // @section machine
@@ -1101,11 +1166,11 @@
 // The size of the print bed
 #define X_BED_SIZE 250
 #define Y_BED_SIZE 210
-#define Z_SIZE 210
+#define Z_SIZE 262
 
 // Travel limits (mm) after homing, corresponding to endstop positions.
-#define X_MIN_POS -1
-#define Y_MIN_POS -4
+#define X_MIN_POS -4
+#define Y_MIN_POS -8
 #define Z_MIN_POS 0
 #define X_MAX_POS (X_BED_SIZE + 1)
 #define Y_MAX_POS (Y_BED_SIZE + 1)
@@ -1134,7 +1199,11 @@
  * Calibrates X, Y homing positions and uses
  * the reference to provide repeatable homing position.
  */
-#define PRECISE_HOMING
+#ifdef I3_COREXY
+//#define PRECISE_HOMING
+#else
+  #define PRECISE_HOMING
+#endif
 
 /**
  * Number of precise homing tries
